@@ -1,0 +1,77 @@
+      html {
+        background-color: #ffff88;
+      }
+
+      body {
+        font-family: verdana, sans-serif;
+        font-size: small;
+      }
+
+      pre {
+        font-family: courier;
+        font-size: small;
+		text-align: left;
+	  }
+
+      input,textarea {
+        float: left;
+      }
+
+	  fieldset.main {
+        background-color: #ffff44;
+      }
+	  
+	  fieldset.navigation {
+		border: 0px;
+		text-align: right;
+      }
+	  
+	  fieldset.edit {
+        background-color: #ffffbb;
+      }
+	  
+	  input.button {
+      	width: 100px;
+      }
+
+      fieldset,select {
+        border: 1px solid #000;
+        margin: 6px;
+      }
+
+      fieldset.buttons {
+        background-color: #ffffbb;
+      }
+	  
+      fieldset.buttons input {
+        width: auto;
+        margin-right: 1px;
+      }
+
+      fieldset.datetime input {
+        width: auto;
+        float: none;
+        text-align: center;
+      }
+
+      label {
+        display: block;
+        width: 100px;
+      }
+
+      input.image {
+        width: auto;
+        margin-right: 1px;
+      }
+
+      td.startdate {
+        background-color: #99ff99;
+        border: 1px solid #000;
+        text-align: center;
+      }
+
+      td.enddate {
+        background-color: #ff9999;
+        border: 1px solid #000;
+        text-align: center;
+

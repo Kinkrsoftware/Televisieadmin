@@ -1,0 +1,4 @@
+@reboot /bin/bash begin.sh
+0 2,6,8,10,14,18,22 * * 1-5 /home/tv/scripts/speelvideo.sh /home/tv/m3u/blok1.m3u # dit is het weekblok van Midvliet TV
+0 6,9,14,18,23 * * 0,6 /home/tv/scripts/speelvideo.sh /home/tv/m3u/blok1.m3u # Dit is het weekendblok ivm live programmering in het weekend
+# eof
