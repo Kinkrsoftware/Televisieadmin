@@ -113,23 +113,25 @@
 
 	     <?php 
 		$fp = fopen('.htdigest', 'r');
-		$result = array();
-		while (!feof($fp)) {
-		  $tmp = fgets($fp);
-		  if (strlen($tmp) > 0) {
-			$waardes = split(':',$tmp);
-			if (count($waardes) == 3) {
-			  	$result[]  = array('login' => $waardes[0]);
+		if ($fp) {
+			$result = array();
+			while (!feof($fp)) {
+			  $tmp = fgets($fp);
+			  if (strlen($tmp) > 0) {
+				$waardes = split(':',$tmp);
+				if (count($waardes) == 3) {
+					$result[]  = array('login' => $waardes[0]);
+				}
+			  }
 			}
-		  }
-		}
-		fclose($fp);
+			fclose($fp);
 
-		if (is_array($result)) {
-			foreach ($result as $entry) {
-				echo '<tr><td>'.$entry['login'].'</td></tr>';
+			if (is_array($result)) {
+				foreach ($result as $entry) {
+					echo '<tr><td>'.$entry['login'].'</td></tr>';
+				}
 			}
-		}			 
+		}
 	     ?>
 	     
 	   </table>

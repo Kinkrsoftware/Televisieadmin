@@ -24,6 +24,8 @@
 
 	testConfiguration();																	// Test if configuration of directorys is OK
 
+	$playlistfile = null;
+
 	if (!isset($_POST['m3uplaylist'])) {															// If playlist is empty load one
 		
 		if ($dh = opendir(M3UDIR)) {
@@ -39,152 +41,155 @@
 	} else {
 		$playlistfile=$_POST['m3uplaylist'];
 	}
-	$_SESSION['m3u']=$playlistfile;												// Store the current playlist in the session
-	$phash = sha1_file ( M3UDIR."/".$playlistfile );						// Calculate hash (used for detecting browser reload)
 
-	if (file_exists (M3UDIR."/".$playlistfile)) {								// If playlist file exists
-		// Read the playlist file in a array and count number of lines
-		$data = file (M3UDIR."/".$playlistfile);
-		$fp = fopen (M3UDIR."/".$playlistfile , "r") or die ("FOUT: Kan $playlistfile niet openen om te lezen, bekijk de permissies");
-		$playlistlength = 0;
-		$playdate[0] = '';																	// Make date of first item empty
-		foreach ($data as $line) {
-			if (strncmp ($line, "#EXTM3U", 7) != 0 && strncmp ($line, "vlc://quit", 8) != 0) {	// Is line editable?
-				$playlisteditable[$playlistlength] = TRUE;					// Line is editable by the user
-			} else {
-				$playlisteditable[$playlistlength] = FALSE;					// Line isn't editable by the user
-			}
-			if (strncmp ($line, "#DATE:", 6) == 0 ) {
-				$playdate[$playlistlength] = $line;								// Store the date
-			} else {
-				$playlist[$playlistlength] = $line;								// Store one line
-				$selected[$playlistlength]=FALSE;								// Initialize selected list 
-				$playlistlength++;														// Number of lines is stored in playlistlength
-				$playdate[$playlistlength] = '';									// Make date of next item empty
-			}
-		}
-		fclose ($fp);
-	}
+	if ($playlistfile !== null)  {
+		$_SESSION['m3u']=$playlistfile;												// Store the current playlist in the session
+		$phash = sha1_file ( M3UDIR."/".$playlistfile );						// Calculate hash (used for detecting browser reload)
 
-	if (isset($_POST['videofile']) && isset ($_POST["submit"] ) && $_POST["phash"] == $phash) {
-		$videofile=$_POST['videofile'];												// Get videofile to add
-		if ($_POST["submit"] == "Toevoegen" && file_exists (M3UDIR."/".$playlistfile)) {
-			// Process "add" button, store the new line in playlist array
-			if ($playlisteditable[0]==FALSE)
-				$start = 1;																			// if first line is not editable insert at 2nd line
-			else
-				$start = 0;
-			if ($playlistlength > 0) {
-				for ($i=($playlistlength-1); $i>=$start; $i--) {
-					$playdate[$i+1] = $playdate[$i];									// Shift line down
-					$playlist[$i+1] = $playlist[$i];											// Shift line down
-				}
-				$playdate[$start] = "#DATE:".date("d-m-Y H:i:s")."\n";		// Store the new date
-				$playlist[$start] = VIDEODIR."/".$videofile."\n";					// Store the new line
-				$selected[$start]=TRUE;														// Line is editable by he user
-				$playlistlength++;																// Increment length
-			} else {
-				$playdate[0] = "#DATE:".date("d-m-Y H:i:s")."\n";				// Store the new date
-				$playlist[0] = VIDEODIR."/".$videofile."\n";							// Store the new line as the last line
-				$selected[0]=TRUE;															// New line is editable by the user
-				$playlistlength++;																// Increment length
-			}
-
-			// Write the file to disc
-			$fp = fopen (M3UDIR."/".$playlistfile, "w") or die ("FOUT: Kan $playlistfile niet openen om te schrijven, bekijk de permissies");
-			for ($i = 0; $i < $playlistlength; $i++) {
-				if ($playdate[$i] != '') {
-					fwrite ($fp, $playdate[$i]);												// Write date to file
-				}
-				fwrite ($fp, $playlist[$i]);													// Write video to file
-			}
-			fclose ($fp) ;
-		}
-		if ($_POST["submit"] == "Verwijderen" && file_exists (M3UDIR."/".$playlistfile)) {
-			// Process "delete" button
+		if (file_exists (M3UDIR."/".$playlistfile)) {								// If playlist file exists
+			// Read the playlist file in a array and count number of lines
 			$data = file (M3UDIR."/".$playlistfile);
-			$fp = fopen (M3UDIR."/".$playlistfile , "w+" ) or die ("FOUT: Kan $playlistfile niet openen om te schrijven, bekijk de permissies");
-			$n = 0;
-			foreach ($data as $line) {														// Repeat for every line
-				if (empty ($_POST["line"][$n])) {
-					fwrite ($fp, $line);															// Write every line when checkbox is not set
+			$fp = fopen (M3UDIR."/".$playlistfile , "r") or die ("FOUT: Kan $playlistfile niet openen om te lezen, bekijk de permissies");
+			$playlistlength = 0;
+			$playdate[0] = '';																	// Make date of first item empty
+			foreach ($data as $line) {
+				if (strncmp ($line, "#EXTM3U", 7) != 0 && strncmp ($line, "vlc://quit", 8) != 0) {	// Is line editable?
+					$playlisteditable[$playlistlength] = TRUE;					// Line is editable by the user
+				} else {
+					$playlisteditable[$playlistlength] = FALSE;					// Line isn't editable by the user
 				}
-				if (strncmp ($line, "#DATE:", 6) != 0)								// Also delete DATE lines
-					$n++;
+				if (strncmp ($line, "#DATE:", 6) == 0 ) {
+					$playdate[$playlistlength] = $line;								// Store the date
+				} else {
+					$playlist[$playlistlength] = $line;								// Store one line
+					$selected[$playlistlength]=FALSE;								// Initialize selected list 
+					$playlistlength++;														// Number of lines is stored in playlistlength
+					$playdate[$playlistlength] = '';									// Make date of next item empty
+				}
 			}
 			fclose ($fp);
-		} elseif ($_POST["submit"] == "Omhoog") {
-			// Process "Up" button
-			if (! empty ($_POST["line"][0]))												// Do not shift line 0
-				$playlisteditable[0]=FALSE;
-			for ($n=0; $n<$playlistlength; $n++) {
-				if ((! empty ($_POST["line"][$n])) && $n>=1) {				// Checkbox is set?
-					if ($playlisteditable[$n-1]==TRUE) {								// When previous line is editable...
-						$tmp=$playdate[$n];													// ...swap two lines
-						$playdate[$n]=$playdate[$n-1];
-						$playdate[$n-1] =$tmp;
-						$tmp=$playlist[$n];														// ...swap two lines
-						$playlist[$n]=$playlist[$n-1];
-						$playlist[$n-1] =$tmp;
-						$selected[$n-1]=TRUE;												// Also set previous checkbox
-					} else {																			// Prevent shifting out of range
-						$playlisteditable[$n]=FALSE;
-					}
-				} else {
-					$selected[$n]=FALSE;														// Deselect surrent checkbox
-				}
-				// Write the file to disc
-				$fp = fopen (M3UDIR."/".$playlistfile, "w") or die ("FOUT: Kan $playlistfile niet openen om te schrijven, bekijk de permissies");
-				for ($i = 0; $i < $playlistlength; $i++) {
-					if ($playdate[$i] != '') {
-						fwrite ($fp, $playdate[$i]);											// Write date to file
-					}
-					fwrite ($fp, $playlist[$i]);												// Write video to file
-				}
-				fclose ($fp) ;
-			}
-		} elseif ($_POST["submit"] == "Omlaag") {
-			// Process "down" button
-			if (! empty ($_POST["line"][$playlistlength-1]))						// Do not shit last line
-				$playlisteditable[$playlistlength-1]=FALSE;
-			for ($n=$playlistlength-1; $n>=0; $n--) {
-				if ((! empty ($_POST["line"][$n])) && $n<$playlistlength-1) {	// Checkbox is set?
-					if ($playlisteditable[$n+1]==TRUE) {								// When next line is editable...
-						$tmp=$playdate[$n];													// ...swap two lines
-						$playdate[$n]=$playdate[$n+1];
-						$playdate[$n+1] =$tmp;
-						$tmp=$playlist[$n];														// ...swap two lines
-						$playlist[$n]=$playlist[$n+1];
-						$playlist[$n+1] =$tmp;
-						$selected[$n+1]=TRUE;												// Also set next checkbox
-					} else {																			// Prevent shifting out of range
-						$playlisteditable[$n]=FALSE;
-					}
-				} else {
-					$selected[$n]=FALSE;														// Deselect current checkbox
-				}
-				// Write the file to disc
-				$fp = fopen (M3UDIR."/".$playlistfile, "w") or die ("FOUT: Kan $playlistfile niet openen om te schrijven, bekijk de permissies");
-				for ($i = 0; $i < $playlistlength; $i++) {
-					if ($playdate[$i] != '') {
-						fwrite ($fp, $playdate[$i]);											// Write date to file
-					}
-					fwrite ($fp, $playlist[$i]);												// Write video to file
-				}
-				fclose ($fp) ;
-			}
-		} elseif ($_POST["submit"] == "Alle") {
-			// Process "every" button
-			for ($n=0; $n<$playlistlength; $n++) {
-				$selected[$n]=TRUE;															// Select all checkboxes
-			}
-		} elseif ($_POST["submit"] == "Geen") {
-			// Process "none" button
-			for ($n=0; $n<$playlistlength; $n++) {
-				$selected[$n]=FALSE;															// Deselect all checkboxes
-			}
 		}
-		$phash = sha1_file (M3UDIR."/".$playlistfile);
+
+		if (isset($_POST['videofile']) && isset ($_POST["submit"] ) && $_POST["phash"] == $phash) {
+			$videofile=$_POST['videofile'];												// Get videofile to add
+			if ($_POST["submit"] == "Toevoegen" && file_exists (M3UDIR."/".$playlistfile)) {
+				// Process "add" button, store the new line in playlist array
+				if ($playlisteditable[0]==FALSE)
+					$start = 1;																			// if first line is not editable insert at 2nd line
+				else
+					$start = 0;
+				if ($playlistlength > 0) {
+					for ($i=($playlistlength-1); $i>=$start; $i--) {
+						$playdate[$i+1] = $playdate[$i];									// Shift line down
+						$playlist[$i+1] = $playlist[$i];											// Shift line down
+					}
+					$playdate[$start] = "#DATE:".date("d-m-Y H:i:s")."\n";		// Store the new date
+					$playlist[$start] = VIDEODIR."/".$videofile."\n";					// Store the new line
+					$selected[$start]=TRUE;														// Line is editable by he user
+					$playlistlength++;																// Increment length
+				} else {
+					$playdate[0] = "#DATE:".date("d-m-Y H:i:s")."\n";				// Store the new date
+					$playlist[0] = VIDEODIR."/".$videofile."\n";							// Store the new line as the last line
+					$selected[0]=TRUE;															// New line is editable by the user
+					$playlistlength++;																// Increment length
+				}
+
+				// Write the file to disc
+				$fp = fopen (M3UDIR."/".$playlistfile, "w") or die ("FOUT: Kan $playlistfile niet openen om te schrijven, bekijk de permissies");
+				for ($i = 0; $i < $playlistlength; $i++) {
+					if ($playdate[$i] != '') {
+						fwrite ($fp, $playdate[$i]);												// Write date to file
+					}
+					fwrite ($fp, $playlist[$i]);													// Write video to file
+				}
+				fclose ($fp) ;
+			}
+			if ($_POST["submit"] == "Verwijderen" && file_exists (M3UDIR."/".$playlistfile)) {
+				// Process "delete" button
+				$data = file (M3UDIR."/".$playlistfile);
+				$fp = fopen (M3UDIR."/".$playlistfile , "w+" ) or die ("FOUT: Kan $playlistfile niet openen om te schrijven, bekijk de permissies");
+				$n = 0;
+				foreach ($data as $line) {														// Repeat for every line
+					if (empty ($_POST["line"][$n])) {
+						fwrite ($fp, $line);															// Write every line when checkbox is not set
+					}
+					if (strncmp ($line, "#DATE:", 6) != 0)								// Also delete DATE lines
+						$n++;
+				}
+				fclose ($fp);
+			} elseif ($_POST["submit"] == "Omhoog") {
+				// Process "Up" button
+				if (! empty ($_POST["line"][0]))												// Do not shift line 0
+					$playlisteditable[0]=FALSE;
+				for ($n=0; $n<$playlistlength; $n++) {
+					if ((! empty ($_POST["line"][$n])) && $n>=1) {				// Checkbox is set?
+						if ($playlisteditable[$n-1]==TRUE) {								// When previous line is editable...
+							$tmp=$playdate[$n];													// ...swap two lines
+							$playdate[$n]=$playdate[$n-1];
+							$playdate[$n-1] =$tmp;
+							$tmp=$playlist[$n];														// ...swap two lines
+							$playlist[$n]=$playlist[$n-1];
+							$playlist[$n-1] =$tmp;
+							$selected[$n-1]=TRUE;												// Also set previous checkbox
+						} else {																			// Prevent shifting out of range
+							$playlisteditable[$n]=FALSE;
+						}
+					} else {
+						$selected[$n]=FALSE;														// Deselect surrent checkbox
+					}
+					// Write the file to disc
+					$fp = fopen (M3UDIR."/".$playlistfile, "w") or die ("FOUT: Kan $playlistfile niet openen om te schrijven, bekijk de permissies");
+					for ($i = 0; $i < $playlistlength; $i++) {
+						if ($playdate[$i] != '') {
+							fwrite ($fp, $playdate[$i]);											// Write date to file
+						}
+						fwrite ($fp, $playlist[$i]);												// Write video to file
+					}
+					fclose ($fp) ;
+				}
+			} elseif ($_POST["submit"] == "Omlaag") {
+				// Process "down" button
+				if (! empty ($_POST["line"][$playlistlength-1]))						// Do not shit last line
+					$playlisteditable[$playlistlength-1]=FALSE;
+				for ($n=$playlistlength-1; $n>=0; $n--) {
+					if ((! empty ($_POST["line"][$n])) && $n<$playlistlength-1) {	// Checkbox is set?
+						if ($playlisteditable[$n+1]==TRUE) {								// When next line is editable...
+							$tmp=$playdate[$n];													// ...swap two lines
+							$playdate[$n]=$playdate[$n+1];
+							$playdate[$n+1] =$tmp;
+							$tmp=$playlist[$n];														// ...swap two lines
+							$playlist[$n]=$playlist[$n+1];
+							$playlist[$n+1] =$tmp;
+							$selected[$n+1]=TRUE;												// Also set next checkbox
+						} else {																			// Prevent shifting out of range
+							$playlisteditable[$n]=FALSE;
+						}
+					} else {
+						$selected[$n]=FALSE;														// Deselect current checkbox
+					}
+					// Write the file to disc
+					$fp = fopen (M3UDIR."/".$playlistfile, "w") or die ("FOUT: Kan $playlistfile niet openen om te schrijven, bekijk de permissies");
+					for ($i = 0; $i < $playlistlength; $i++) {
+						if ($playdate[$i] != '') {
+							fwrite ($fp, $playdate[$i]);											// Write date to file
+						}
+						fwrite ($fp, $playlist[$i]);												// Write video to file
+					}
+					fclose ($fp) ;
+				}
+			} elseif ($_POST["submit"] == "Alle") {
+				// Process "every" button
+				for ($n=0; $n<$playlistlength; $n++) {
+					$selected[$n]=TRUE;															// Select all checkboxes
+				}
+			} elseif ($_POST["submit"] == "Geen") {
+				// Process "none" button
+				for ($n=0; $n<$playlistlength; $n++) {
+					$selected[$n]=FALSE;															// Deselect all checkboxes
+				}
+			}
+			$phash = sha1_file (M3UDIR."/".$playlistfile);
+		}
 	}
 
 	if (isset($_POST['newplaylist']) && isset($_POST['submit']) && $_POST["submit"] == "Nieuw Draaiboek") {
