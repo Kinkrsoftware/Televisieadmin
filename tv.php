@@ -16,6 +16,8 @@
     // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 	require_once ('tvfunctions.php');											// Functions for TV scripts
+    authorize(1);
+
 	require_once ('tvconfig.php');												// Settings for TV scripts
 
 	testConfiguration();																	// Test if configuration of directorys is OK

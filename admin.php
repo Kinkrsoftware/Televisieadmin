@@ -1,4 +1,8 @@
 <?php
+  require_once ('tvfunctions.php'); 
+
+  authorize(1);
+
   require_once ('tvconfig.php'); 
   $error = '';
   if (isset($_POST['action'])) {

@@ -18,10 +18,12 @@
 	// This file is partly based on Basic TODO list (todo.php) written by 
 	// Amadeus Stevenson. See acknowledgements.txt for the license of todo.php 
 
-	session_start();
 	require_once ('tvfunctions.php');											// Functions for TV scripts
+    authorize(1);
+
 	require_once ('tvconfig.php');												// Settings for TV scripts
 
+	session_start();
 	testConfiguration();																	// Test if configuration of directorys is OK
 
 	$playlistfile = null;

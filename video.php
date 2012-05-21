@@ -19,6 +19,8 @@
 	// Amadeus Stevenson. See acknowledgements.txt for the license of todo.php 
 
 	require_once ('tvfunctions.php');											// Functions for TV scripts
+    authorize(1);
+
 	require_once ('tvconfig.php');												// Settings for TV scripts
 	
 	testConfiguration();																	// Test if configuration of directorys is OK
@@ -178,6 +180,7 @@
 												echo "<td><img src=\"$img\" width=\"100\" height=\"75\" border=\"1\" alt=\"Screen Capture\" /></td>";										
 											$n++;
 											echo "</tr>\n";
+
 										}
 									}
 								}

@@ -15,6 +15,24 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 // Calculate time since now. Code taken from: http://nl2.php.net/manual/en/function.time.php
+
+require_once('tvconfig.php');
+
+function authorize($atmost) {
+    $level = 2;
+    
+    if (in_array($_SERVER['PHP_AUTH_USER'], array('ton', 'skinkie', 'marcel'))) {
+        $level = 0;
+    } elseif (in_array($_SERVER['PHP_AUTH_USER'], array('henri'))) {
+        $level = 1;
+    } 
+    
+    if ($atmost < $level) {
+        return header('Location: index.php');
+        exit;
+    }
+}
+
 function nicetime($date)
 {
 	if(empty($date)) {
@@ -159,6 +177,45 @@ function dirtoselectMime($name, $dir, $active = '', $empty = false, $maxdate = 0
 	}
 	return $result;
 }
+
+function multidirtoselectExts($name, $dirs, $active = '', $empty = false, $maxdate = 0, $cmpext = array('m3u'), $append = array()) {
+	$templates = array();
+	if ($empty===true) $templates[] = '';
+    foreach ($dirs as $dir) {
+        if (is_dir($dir)) {
+            if ($dh = opendir($dir)) {
+                while (($file = readdir($dh)) !== false) {
+                    $path = $dir.'/'.$file;
+                    if (!is_dir($path)) {
+                        $fileext = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+                        if (in_array ($fileext, $cmpext)) {						// if file has correct extension
+                            if ($maxdate == 0 || (filectime($path) > $maxdate)) {
+                                $templates[]=$path;
+                            }
+                        }
+                    }
+                }
+                closedir($dh);
+            }
+        }
+    }
+
+	sort($templates);
+    $templates = array_merge($templates, $append);
+
+	$result = '';
+	if ($active != '' && !in_array($active, $templates)) {
+		$result = '<input type="text" name="'.$name.'" value="'.$active.'" />';
+	} else {
+		$result = '<select name="'.$name.'">';
+		foreach ($templates as $key => $value)
+			$result.='<option value="'.$value.'"'.($value==$active?' selected="1"':'').'>'.$value.'</option>';
+		$result .= '</select>';
+	}
+    return $result;
+}
+
+
 
 function dirtoselectExt($name, $dir, $active = '', $empty = false, $maxdate = 0, $cmpext = '.m3u') {
 	$templates = array();
